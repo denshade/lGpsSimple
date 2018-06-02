@@ -64,7 +64,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
                 }
             }
 
-            text.setText(locationAsString.toString() + " \n Distance in meter: " + distanceInMeters);
+            text.setText("Distance in kilometer: " + distanceInMeters / 1000 + "\n\n" + locationAsString.toString());
         }
 
 
