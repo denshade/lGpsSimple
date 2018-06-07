@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,13 +48,12 @@ public class LogGPSCoordinates extends AppCompatActivity {
         public void onLocationChanged(Location location) {
             locations.add(location);
             Log.e(TAG, "onLocationChanged: " + location);
-            TextView text = (TextView)findViewById(R.id.gps);
-            StringBuilder locationAsString = new StringBuilder();
+            TextView elapseddistance = (TextView)findViewById(R.id.elapseddistance);
+
             double distanceInMeters = 0;
             for (int a = 0; a < locations.size(); a++)
             {
                 Location curLocation = locations.get(a);
-                locationAsString.append(curLocation.getLatitude()).append(":").append(curLocation.getLongitude()).append("\n");
                 if (a > 0)
                 {
                     Location prev = locations.get(a - 1);
@@ -63,8 +63,8 @@ public class LogGPSCoordinates extends AppCompatActivity {
                             );
                 }
             }
-
-            text.setText("Distance in kilometer: " + distanceInMeters / 1000 + "\n\n" + locationAsString.toString());
+            DecimalFormat df = new DecimalFormat("#.##");
+            elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000) + " km");
         }
 
 
@@ -123,6 +123,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
                         LOCATION_DISTANCE,
                         mLocationListeners[0]
                 );
+                TextView textCaption = (TextView) findViewById(R.id.gpsLabel);
                 String action = "Stopped ";
                 if (activateGPSLogging)
                 {
@@ -132,6 +133,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
                 } else {
                     fab.setImageResource(android.R.drawable.ic_media_play);
                 }
+                textCaption.setText(action + " Recording GPS information" );
                 Snackbar.make(view, action + " collecting GPS data", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }

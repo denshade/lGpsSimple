@@ -9,21 +9,27 @@
     tools:context=".LogGPSCoordinates"
     tools:showIn="@layout/activity_log_gpscoordinates">
 
-    <ScrollView
-        android:id="@+id/SCROLLER_ID"
-        android:layout_width="fill_parent"
+
+    <TextView
+        android:id="@+id/gpsLabel"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
-        android:fillViewport="true">
-        <TextView
-            android:id="@+id/gps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="GPS locations come here"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </ScrollView>
+        android:text="Not recording GPS locations."
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.568"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.528" />
+
+    <TextView
+        android:id="@+id/elapseddistance"
+        android:layout_width="385dp"
+        android:layout_height="48dp"
+        android:background="@android:color/holo_green_light"
+        android:text="Elapsed distance: 0 km"
+        android:textSize="24sp"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
