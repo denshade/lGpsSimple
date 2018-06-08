@@ -117,20 +117,22 @@ public class LogGPSCoordinates extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 activateGPSLogging = !activateGPSLogging;
-                locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER,
-                        LOCATION_INTERVAL,
-                        LOCATION_DISTANCE,
-                        mLocationListeners[0]
-                );
+
                 TextView textCaption = (TextView) findViewById(R.id.gpsLabel);
                 String action = "Stopped ";
                 if (activateGPSLogging)
                 {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            LOCATION_INTERVAL,
+                            LOCATION_DISTANCE,
+                            mLocationListeners[0]
+                    );
                     action = "Started ";
                     locations.clear();
                     fab.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
+                    locationManager.removeUpdates(mLocationListeners[0]);
                     fab.setImageResource(android.R.drawable.ic_media_play);
                 }
                 textCaption.setText(action + " Recording GPS information" );
