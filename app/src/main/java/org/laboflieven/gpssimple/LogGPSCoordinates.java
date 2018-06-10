@@ -33,7 +33,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
     private List<Location> locations = new ArrayList<Location>();
 
     LocationListener[] mLocationListeners = new LocationListener[]{
-            new LocationListener(LocationManager.PASSIVE_PROVIDER)
+            new LocationListener(LocationManager.GPS_PROVIDER)
     };
 
     private LocationManager locationManager;
@@ -63,8 +63,8 @@ public class LogGPSCoordinates extends AppCompatActivity {
                             );
                 }
             }
-            DecimalFormat df = new DecimalFormat("#.##");
-            elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000) + " km");
+            DecimalFormat df = new DecimalFormat("#.###");
+            elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000.0) + " km");
         }
 
 
@@ -118,7 +118,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
             public void onClick(View view) {
                 activateGPSLogging = !activateGPSLogging;
 
-                TextView textCaption = (TextView) findViewById(R.id.gpsLabel);
+                TextView textCaption = (TextView) findViewById(R.id.action);
                 String action = "Stopped ";
                 if (activateGPSLogging)
                 {

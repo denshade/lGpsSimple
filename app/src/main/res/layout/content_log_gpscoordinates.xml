@@ -11,10 +11,10 @@
 
 
     <TextView
-        android:id="@+id/gpsLabel"
+        android:id="@+id/elapseddistance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Not recording GPS locations."
+        android:text="Elapsed distance: 0 km"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.568"
@@ -24,12 +24,12 @@
         app:layout_constraintVertical_bias="0.528" />
 
     <TextView
-        android:id="@+id/elapseddistance"
+        android:id="@+id/action"
         android:layout_width="385dp"
         android:layout_height="48dp"
         android:background="@android:color/holo_green_light"
-        android:text="Elapsed distance: 0 km"
-        android:textSize="24sp"
+        android:text="Not recording GPS locations."
+        android:textSize="18sp"
         app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
