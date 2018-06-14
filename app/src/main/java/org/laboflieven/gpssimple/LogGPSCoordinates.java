@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -30,7 +31,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
     private static final String TAG = "MyLocationService";
     private Boolean activateGPSLogging = false;
 
-    private List<Location> locations = new ArrayList<Location>();
+    private final ArrayList<Location> locations = new ArrayList<>();
 
     LocationListener[] mLocationListeners = new LocationListener[]{
             new LocationListener(LocationManager.GPS_PROVIDER)
@@ -48,23 +49,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
         public void onLocationChanged(Location location) {
             locations.add(location);
             Log.e(TAG, "onLocationChanged: " + location);
-            TextView elapseddistance = (TextView)findViewById(R.id.elapseddistance);
-
-            double distanceInMeters = 0;
-            for (int a = 0; a < locations.size(); a++)
-            {
-                Location curLocation = locations.get(a);
-                if (a > 0)
-                {
-                    Location prev = locations.get(a - 1);
-                    distanceInMeters += LocationCalculator.distance(prev.getLatitude(), curLocation.getLatitude(),
-                            prev.getLongitude(), curLocation.getLongitude(),
-                            prev.getAltitude(), curLocation.getAltitude()
-                            );
-                }
-            }
-            DecimalFormat df = new DecimalFormat("#.###");
-            elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000.0) + " km");
+            refreshDistance();
         }
 
 
@@ -84,20 +69,46 @@ public class LogGPSCoordinates extends AppCompatActivity {
         }
     }
 
-    public LogGPSCoordinates() {
+    private void refreshDistance() {
+        TextView elapseddistance = findViewById(R.id.elapseddistance);
+
+        double distanceInMeters = 0;
+        for (int a = 0; a < locations.size(); a++)
+        {
+            Location curLocation = locations.get(a);
+            if (a > 0)
+            {
+                Location prev = locations.get(a - 1);
+                distanceInMeters += LocationCalculator.distance(prev.getLatitude(), curLocation.getLatitude(),
+                        prev.getLongitude(), curLocation.getLongitude(),
+                        prev.getAltitude(), curLocation.getAltitude()
+                        );
+            }
+        }
+        Log.e(TAG, "drawing locations " + locations);
+        DecimalFormat df = new DecimalFormat("#.###");
+        elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000.0) + " km");
+    }
+
+    public LogGPSCoordinates()
+    {
+        Log.e(TAG, "Constructing");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if (savedInstanceState != null)
+        {
+            activateGPSLogging = savedInstanceState.getInt("LOCATIONLISTENING") == 1;
+            locations.addAll((ArrayList<Location>) savedInstanceState.getSerializable("LOCATIONS"));
+            Log.e(TAG, "Loaded instance data " + locations);
+        }
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-
-
-        System.out.println("Permissions ok");
+        Log.e(TAG, "Permissions ok");
 
         setContentView(R.layout.activity_log_gpscoordinates);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -111,37 +122,63 @@ public class LogGPSCoordinates extends AppCompatActivity {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        final FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
                 activateGPSLogging = !activateGPSLogging;
-
-                TextView textCaption = (TextView) findViewById(R.id.action);
-                String action = "Stopped ";
                 if (activateGPSLogging)
                 {
+                    locations.clear();
                     locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
                             LOCATION_INTERVAL,
                             LOCATION_DISTANCE,
                             mLocationListeners[0]
                     );
-                    action = "Started ";
-                    locations.clear();
-                    fab.setImageResource(android.R.drawable.ic_media_pause);
                 } else {
                     locationManager.removeUpdates(mLocationListeners[0]);
-                    fab.setImageResource(android.R.drawable.ic_media_play);
                 }
-                textCaption.setText(action + " Recording GPS information" );
-                Snackbar.make(view, action + " collecting GPS data", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                displayLocationState(fab, view);
             }
         });
+        displayLocationState(fab, null);
+        refreshDistance();
     }
 
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("LOCATIONLISTENING", activateGPSLogging ? 1: 0);
+        outState.putSerializable("LOCATIONS", locations);
+        Log.e(TAG, "Stored the data " + locations);
+    }
+
+    @SuppressLint("MissingPermission")
+    @NonNull
+    private void displayLocationState(FloatingActionButton fab, View view) {
+        TextView textCaption = findViewById(R.id.action);
+        String text = "Not recording GPS information.";
+        if (activateGPSLogging)
+        {
+            text = " Recording GPS information";
+            fab.setImageResource(android.R.drawable.ic_media_pause);
+        } else {
+            fab.setImageResource(android.R.drawable.ic_media_play);
+        }
+        textCaption.setText(text);
+        if (view != null)
+        {
+            Snackbar.make(view, (activateGPSLogging ? "Started" : "Stopped") + " collecting GPS data", Snackbar.LENGTH_LONG)
+                    .show();
+        }
+    }
+
+    protected void onPause() {
+        super.onPause();
+
+    }
 
 
     @Override
