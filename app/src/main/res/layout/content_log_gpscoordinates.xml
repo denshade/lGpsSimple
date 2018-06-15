@@ -25,11 +25,13 @@
 
     <TextView
         android:id="@+id/action"
-        android:layout_width="385dp"
+        android:layout_width="0dp"
         android:layout_height="48dp"
         android:background="@android:color/holo_green_light"
         android:text="Not recording GPS locations."
         android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

@@ -11,27 +11,24 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.List;
 
 public class LogGPSCoordinates extends AppCompatActivity {
 
     private static final long LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 10f;
     private static final String TAG = "MyLocationService";
-    private Boolean activateGPSLogging = false;
+    private static Boolean activateGPSLogging = false;
 
-    private final ArrayList<Location> locations = new ArrayList<>();
+    private static final ArrayList<Location> locations = new ArrayList<>();
 
     LocationListener[] mLocationListeners = new LocationListener[]{
             new LocationListener(LocationManager.GPS_PROVIDER)
@@ -65,7 +62,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.e(TAG, "onStatusChanged: " + provider);
+            Log.e(TAG, "onStatusChanged: " + provider + " " +status + " " + extras);
         }
     }
 
@@ -98,12 +95,6 @@ public class LogGPSCoordinates extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null)
-        {
-            activateGPSLogging = savedInstanceState.getInt("LOCATIONLISTENING") == 1;
-            locations.addAll((ArrayList<Location>) savedInstanceState.getSerializable("LOCATIONS"));
-            Log.e(TAG, "Loaded instance data " + locations);
-        }
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         Log.e(TAG, "Permissions ok");
 
@@ -120,6 +111,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+
             return;
         }
         final FloatingActionButton fab = findViewById(R.id.fab);
@@ -131,33 +123,34 @@ public class LogGPSCoordinates extends AppCompatActivity {
                 if (activateGPSLogging)
                 {
                     locations.clear();
+                    locationManager.removeUpdates(mLocationListeners[0]);//Avoid listeners being registered twice.
                     locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
                             LOCATION_INTERVAL,
                             LOCATION_DISTANCE,
                             mLocationListeners[0]
                     );
+                    Log.e(TAG, "Added a listener");
                 } else {
                     locationManager.removeUpdates(mLocationListeners[0]);
+                    Log.e(TAG, "Removed a listener");
                 }
-                displayLocationState(fab, view);
+                refreshActionToolbar(fab, view);
+                refreshDistance();
             }
         });
-        displayLocationState(fab, null);
+        refreshActionToolbar(fab, null);
         refreshDistance();
     }
 
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt("LOCATIONLISTENING", activateGPSLogging ? 1: 0);
-        outState.putSerializable("LOCATIONS", locations);
-        Log.e(TAG, "Stored the data " + locations);
     }
 
     @SuppressLint("MissingPermission")
     @NonNull
-    private void displayLocationState(FloatingActionButton fab, View view) {
+    private void refreshActionToolbar(FloatingActionButton fab, View view) {
         TextView textCaption = findViewById(R.id.action);
         String text = "Not recording GPS information.";
         if (activateGPSLogging)
@@ -188,18 +181,4 @@ public class LogGPSCoordinates extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
