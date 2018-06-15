@@ -24,21 +24,22 @@ import java.util.ArrayList;
 public class LogGPSCoordinates extends AppCompatActivity {
 
     private static final long LOCATION_INTERVAL = 1000;
-    private static final float LOCATION_DISTANCE = 10f;
+    private static final float LOCATION_DISTANCE = 100f;
     private static final String TAG = "MyLocationService";
     private static Boolean activateGPSLogging = false;
-
+    private static LocationListener listener = new LocationListener("GPS", null);
     private static final ArrayList<Location> locations = new ArrayList<>();
 
-    LocationListener[] mLocationListeners = new LocationListener[]{
-            new LocationListener(LocationManager.GPS_PROVIDER)
-    };
+
 
     private LocationManager locationManager;
 
-    private class LocationListener implements android.location.LocationListener {
+    private static class LocationListener implements android.location.LocationListener {
 
-        public LocationListener(String provider) {
+        private DistanceRefresher distanceRefresher;
+
+        public LocationListener(String provider, DistanceRefresher refresher) {
+            this.distanceRefresher = refresher;
             Log.e(TAG, "LocationListener " + provider);
         }
 
@@ -46,7 +47,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
         public void onLocationChanged(Location location) {
             locations.add(location);
             Log.e(TAG, "onLocationChanged: " + location);
-            refreshDistance();
+            distanceRefresher.refreshDistance(locations);
         }
 
 
@@ -64,29 +65,19 @@ public class LogGPSCoordinates extends AppCompatActivity {
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.e(TAG, "onStatusChanged: " + provider + " " +status + " " + extras);
         }
-    }
 
-    private void refreshDistance() {
-        TextView elapseddistance = findViewById(R.id.elapseddistance);
-
-        double distanceInMeters = 0;
-        for (int a = 0; a < locations.size(); a++)
-        {
-            Location curLocation = locations.get(a);
-            if (a > 0)
-            {
-                Location prev = locations.get(a - 1);
-                distanceInMeters += LocationCalculator.distance(prev.getLatitude(), curLocation.getLatitude(),
-                        prev.getLongitude(), curLocation.getLongitude(),
-                        prev.getAltitude(), curLocation.getAltitude()
-                        );
-            }
+        public void setDistanceRefresher(DistanceRefresher distanceRefresher) {
+            this.distanceRefresher = distanceRefresher;
         }
-        Log.e(TAG, "drawing locations " + locations);
-        DecimalFormat df = new DecimalFormat("#.###");
-        elapseddistance.setText("Elapsed distance: "  + df.format(distanceInMeters / 1000.0) + " km");
     }
 
+    /**
+     * Lessons learned.
+     * LogGPSCoordinates is destroyed and recreated every time the app is rotated.
+     * This is savage on the locations we store.
+     * The location listener references an existing control. This is a problem. We need to
+     * update the location listener with the reference of the new control.
+     */
     public LogGPSCoordinates()
     {
         Log.e(TAG, "Constructing");
@@ -97,7 +88,6 @@ public class LogGPSCoordinates extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         Log.e(TAG, "Permissions ok");
-
         setContentView(R.layout.activity_log_gpscoordinates);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -114,33 +104,34 @@ public class LogGPSCoordinates extends AppCompatActivity {
 
             return;
         }
+        final DistanceRefresher refresher = new DistanceRefresher((TextView) findViewById(R.id.elapseddistance));
+        listener.setDistanceRefresher(refresher);
         final FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
                 activateGPSLogging = !activateGPSLogging;
-                if (activateGPSLogging)
-                {
+                if (activateGPSLogging) {
                     locations.clear();
-                    locationManager.removeUpdates(mLocationListeners[0]);//Avoid listeners being registered twice.
+                    locationManager.removeUpdates(listener);//Avoid listeners being registered twice.
                     locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
                             LOCATION_INTERVAL,
                             LOCATION_DISTANCE,
-                            mLocationListeners[0]
+                            listener
                     );
                     Log.e(TAG, "Added a listener");
                 } else {
-                    locationManager.removeUpdates(mLocationListeners[0]);
+                    locationManager.removeUpdates(listener);
                     Log.e(TAG, "Removed a listener");
                 }
                 refreshActionToolbar(fab, view);
-                refreshDistance();
+                refresher.refreshDistance(locations);
             }
         });
         refreshActionToolbar(fab, null);
-        refreshDistance();
+        refresher.refreshDistance(locations);
     }
 
     @Override
@@ -166,19 +157,6 @@ public class LogGPSCoordinates extends AppCompatActivity {
             Snackbar.make(view, (activateGPSLogging ? "Started" : "Stopped") + " collecting GPS data", Snackbar.LENGTH_LONG)
                     .show();
         }
-    }
-
-    protected void onPause() {
-        super.onPause();
-
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_log_gpscoordinates, menu);
-        return true;
     }
 
 }
