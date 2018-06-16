@@ -95,13 +95,8 @@ public class LogGPSCoordinates extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     1);
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
+            TextView view = findViewById(R.id.elapseddistance);
+            view.setText("This app needs GPS access, please allow the access and restart the app");
             return;
         }
         final DistanceRefresher refresher = new DistanceRefresher((TextView) findViewById(R.id.elapseddistance));
