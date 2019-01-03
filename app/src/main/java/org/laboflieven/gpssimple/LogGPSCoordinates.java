@@ -2,12 +2,16 @@ package org.laboflieven.gpssimple;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -15,11 +19,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
 import android.widget.TextView;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
+import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocalLocation;
+import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocationFileDao;
+
+import java.io.IOException;
 
 public class LogGPSCoordinates extends AppCompatActivity {
 
@@ -27,8 +32,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
     private static final float LOCATION_DISTANCE = 100f;
     private static final String TAG = "MyLocationService";
     private static Boolean activateGPSLogging = false;
-    private static LocationListener listener = new LocationListener("GPS", null);
-    private static final ArrayList<Location> locations = new ArrayList<>();
+    private static LocationListener listener;
 
 
 
@@ -37,17 +41,20 @@ public class LogGPSCoordinates extends AppCompatActivity {
     private static class LocationListener implements android.location.LocationListener {
 
         private DistanceRefresher distanceRefresher;
+        private final String fileDir;
 
-        public LocationListener(String provider, DistanceRefresher refresher) {
+        public LocationListener(String provider, DistanceRefresher refresher, String fileDir) {
+
             this.distanceRefresher = refresher;
+            this.fileDir = fileDir;
             Log.e(TAG, "LocationListener " + provider);
         }
 
         @Override
         public void onLocationChanged(Location location) {
-            locations.add(location);
+            LocationFileDao.addLocation(fileDir, new LocalLocation(location));
             Log.e(TAG, "onLocationChanged: " + location);
-            distanceRefresher.refreshDistance(locations);
+            distanceRefresher.refreshDistance(LocationFileDao.getLocations(fileDir));
         }
 
 
@@ -85,6 +92,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        listener = new LocationListener("GPS", null, getApplicationContext().getFilesDir().toString());
         super.onCreate(savedInstanceState);
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         Log.e(TAG, "Permissions ok");
@@ -103,12 +111,13 @@ public class LogGPSCoordinates extends AppCompatActivity {
         listener.setDistanceRefresher(refresher);
         final FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
                 activateGPSLogging = !activateGPSLogging;
                 if (activateGPSLogging) {
-                    locations.clear();
+                    LocationFileDao.clearLocations(getApplicationContext().getFilesDir().toString());
                     locationManager.removeUpdates(listener);//Avoid listeners being registered twice.
                     locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
@@ -122,11 +131,12 @@ public class LogGPSCoordinates extends AppCompatActivity {
                     Log.e(TAG, "Removed a listener");
                 }
                 refreshActionToolbar(fab, view);
-                refresher.refreshDistance(locations);
+                refresher.refreshDistance(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString()));
             }
         });
         refreshActionToolbar(fab, null);
-        refresher.refreshDistance(locations);
+        refresher.refreshDistance(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString()));
+
     }
 
     @Override
