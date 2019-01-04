@@ -44,4 +44,9 @@ public class LocalLocation
     public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
+
+    @Override
+    public String toString() {
+        return "Long:" + getLongitude() + ", Lat.:" + getLatitude() + ", Alt.: " + getAltitude();
+    }
 }

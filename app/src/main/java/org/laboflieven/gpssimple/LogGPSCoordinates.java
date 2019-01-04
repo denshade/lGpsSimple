@@ -4,10 +4,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,7 +25,9 @@ import android.widget.TextView;
 
 import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocalLocation;
 import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocationFileDao;
+import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocationWrapper;
 
+import java.io.File;
 import java.io.IOException;
 
 public class LogGPSCoordinates extends AppCompatActivity {
@@ -134,6 +138,27 @@ public class LogGPSCoordinates extends AppCompatActivity {
                 refresher.refreshDistance(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString()));
             }
         });
+        final FloatingActionButton share = findViewById(R.id.share);
+        share.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onClick(View view) {
+                Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+                File fileWithinMyDir = new File(getApplicationContext().getFilesDir(), "location.txt");
+                Log.i(TAG, fileWithinMyDir.length()  + "" );
+                if(fileWithinMyDir.exists()) {
+                    intentShareFile.setType("application/txt");
+//                    intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+getApplicationContext().getFilesDir()+"/"+ "location.txt"));
+                    Log.i(TAG, "file://"+getApplicationContext().getFilesDir()+"/"+ "location.txt");
+
+                    intentShareFile.putExtra(Intent.EXTRA_SUBJECT,
+                            "Sharing Locations...");
+                    intentShareFile.putExtra(Intent.EXTRA_TEXT, LocationWrapper.toString(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString())));
+                    startActivityForResult(Intent.createChooser(intentShareFile, "Share File"), 2);
+                }
+            }
+        });
+
         refreshActionToolbar(fab, null);
         refresher.refreshDistance(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString()));
 
@@ -145,7 +170,6 @@ public class LogGPSCoordinates extends AppCompatActivity {
     }
 
     @SuppressLint("MissingPermission")
-    @NonNull
     private void refreshActionToolbar(FloatingActionButton fab, View view) {
         TextView textCaption = findViewById(R.id.action);
         String text = "Not recording GPS information.";
@@ -154,7 +178,7 @@ public class LogGPSCoordinates extends AppCompatActivity {
             text = " Recording GPS information";
             fab.setImageResource(android.R.drawable.ic_media_pause);
         } else {
-            fab.setImageResource(android.R.drawable.ic_media_play);
+            fab.setImageResource(android.R.drawable.ic_menu_compass);
         }
         textCaption.setText(text);
         if (view != null)
