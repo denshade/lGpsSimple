@@ -154,7 +154,10 @@ public class LogGPSCoordinates extends AppCompatActivity {
                     intentShareFile.putExtra(Intent.EXTRA_SUBJECT,
                             "Sharing Locations...");
                     intentShareFile.putExtra(Intent.EXTRA_TEXT, LocationWrapper.toString(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString())));
-                    startActivityForResult(Intent.createChooser(intentShareFile, "Share File"), 2);
+                    startActivity(Intent.createChooser(intentShareFile, "Share File"));
+                } else {
+                    Snackbar.make(view, "Sorry couldn't find the locations file " + getApplicationContext().getFilesDir() +  "location.txt", Snackbar.LENGTH_LONG)
+                            .show();
                 }
             }
         });
