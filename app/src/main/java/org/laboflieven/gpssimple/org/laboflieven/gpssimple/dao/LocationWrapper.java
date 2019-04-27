@@ -9,16 +9,16 @@ public class LocationWrapper
 {
     public static String toString(LocalLocation location)
     {
-        return location.getAltitude() + " " + location.getLatitude() + " " + location.getLongitude();
+        return location.getAltitude() + " " + location.getLatitude() + " " + location.getLongitude()+ " " + location.getSecondSinceEpoch();
     }
 
     public static String toString(List<LocalLocation> locations)
     {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("Longitude,Lattitude,Altitude\n");
+        buffer.append("Longitude,Lattitude,Altitude,Time\n");
         for (LocalLocation location : locations)
         {
-            buffer.append(location.getLongitude() + "," + location.getLatitude() + "," + location.getAltitude() + "\n");
+            buffer.append(location.getLongitude() + "," + location.getLatitude() + "," + location.getAltitude() + "," + location.getSecondSinceEpoch() + "\n");
         }
         return buffer.toString();
     }
@@ -32,6 +32,7 @@ public class LocationWrapper
         l.setAltitude(Double.parseDouble(strings[0]));
         l.setLatitude(Double.parseDouble(strings[1]));
         l.setLongitude(Double.parseDouble(strings[2]));
+        l.setSecondSinceEpoch(Long.parseLong(strings[3]));
         return l;
     }
 }

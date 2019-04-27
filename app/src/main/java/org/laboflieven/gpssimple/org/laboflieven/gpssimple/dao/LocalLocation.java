@@ -7,6 +7,7 @@ public class LocalLocation
     private double altitude;
     private double longitude;
     private double latitude;
+    private long secondSinceEpoch;
 
     public LocalLocation()
     {
@@ -17,6 +18,7 @@ public class LocalLocation
         altitude = location.getAltitude();
         longitude = location.getLongitude();
         latitude = location.getLatitude();
+        setSecondSinceEpoch(System.currentTimeMillis()/1000);
     }
 
 
@@ -47,6 +49,14 @@ public class LocalLocation
 
     @Override
     public String toString() {
-        return "Long:" + getLongitude() + ", Lat.:" + getLatitude() + ", Alt.: " + getAltitude();
+        return "Long:" + getLongitude() + ", Lat.:" + getLatitude() + ", Alt.: " + getAltitude() + ", time: " + getSecondSinceEpoch();
+    }
+
+    public long getSecondSinceEpoch() {
+        return secondSinceEpoch;
+    }
+
+    public void setSecondSinceEpoch(long secondSinceEpoch) {
+        this.secondSinceEpoch = secondSinceEpoch;
     }
 }
