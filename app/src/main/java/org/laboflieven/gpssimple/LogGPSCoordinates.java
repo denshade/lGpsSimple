@@ -23,11 +23,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.GPXGenerator;
 import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocalLocation;
 import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocationFileDao;
 import org.laboflieven.gpssimple.org.laboflieven.gpssimple.dao.LocationWrapper;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class LogGPSCoordinates extends AppCompatActivity {
@@ -143,18 +145,23 @@ public class LogGPSCoordinates extends AppCompatActivity {
             @SuppressLint("MissingPermission")
             @Override
             public void onClick(View view) {
-                Intent intentShareFile = new Intent(Intent.ACTION_SEND);
                 File fileWithinMyDir = new File(getApplicationContext().getFilesDir(), "location.txt");
-                Log.i(TAG, fileWithinMyDir.length()  + "" );
-                if(fileWithinMyDir.exists()) {
-                    intentShareFile.setType("application/txt");
-//                    intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+getApplicationContext().getFilesDir()+"/"+ "location.txt"));
-                    Log.i(TAG, "file://"+getApplicationContext().getFilesDir()+"/"+ "location.txt");
 
-                    intentShareFile.putExtra(Intent.EXTRA_SUBJECT,
-                            "Sharing Locations...");
-                    intentShareFile.putExtra(Intent.EXTRA_TEXT, LocationWrapper.toString(LocationFileDao.getLocations(getApplicationContext().getFilesDir().toString())));
-                    startActivity(Intent.createChooser(intentShareFile, "Share File"));
+                if(fileWithinMyDir.exists()) {
+                    File fileGpx = new File(getApplicationContext().getFilesDir(), "location.gpx");
+                    try {
+                        GPXGenerator gen = new GPXGenerator();
+                        FileWriter writer = new FileWriter(fileGpx);
+                        writer.write(gen.generate(LocationFileDao.getLocations(fileWithinMyDir.toString())));
+                        writer.close();
+                        Intent shareIntent = new Intent();
+                        shareIntent.setAction(Intent.ACTION_SEND);
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, fileGpx.toURI());
+                        shareIntent.setType("application/xml");
+                        startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.send)));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Snackbar.make(view, "Sorry couldn't find the locations file " + getApplicationContext().getFilesDir() +  "location.txt", Snackbar.LENGTH_LONG)
                             .show();
